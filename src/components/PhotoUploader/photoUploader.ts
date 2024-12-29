@@ -64,7 +64,6 @@ export class PhotoUploader extends BaseElement {
     const target = event.target;
     const files = target.files;
     const image = files[0];
-    this.photoEditorService.updatePhotoData(image);
 
     const fileReader = new FileReader();
     fileReader.onload = ({ target }) => {
@@ -98,8 +97,7 @@ export class PhotoUploader extends BaseElement {
       img.width as number,
       img.height as number
     );
-    this.photoEditorService.setOriginalImageData(imageData);
-    this.photoEditorService.savePhotoInCVFormat(canvas);
+    this.photoEditorService.setNewPhotoData(imageData);
   }
 
   private updateImage(imageData: ImageData) {

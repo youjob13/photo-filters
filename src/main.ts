@@ -2,17 +2,26 @@ import "./style.css";
 import { PhotoUploader } from "./components/index";
 import { PhotoEditor } from "./components/PhotoEditor/photoEditor";
 import { PhotoEditorService } from "./services/photoEditor.service";
+import { HistogramService } from "./services/histogram.service";
+import { Histogram } from "./components/Histogram/histogram";
 
 class App {
   constructor(private entryPoint: HTMLElement) {}
 
   start() {
-    const photoEditorService = new PhotoEditorService();
+    const histogramService = new HistogramService();
+    const histogram = new Histogram({
+      histogramService,
+    });
+    const photoEditorService = new PhotoEditorService(histogramService);
     const photoUploader = new PhotoUploader({ photoEditorService });
-    const photoEditor = new PhotoEditor({ photoEditorService });
+    const photoEditor = new PhotoEditor({
+      photoEditorService,
+    });
 
     this.entryPoint.append(
       photoUploader.getElement(),
+      histogram.getElement(),
       photoEditor.getElement()
     );
   }

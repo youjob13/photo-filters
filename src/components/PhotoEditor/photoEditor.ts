@@ -13,39 +13,31 @@ export class PhotoEditor extends BaseElement {
   private brightnessSlider!: BaseControl;
   private saturationSlider!: BaseControl;
   private contrastSlider!: BaseControl;
-  private canvasHistogram!: BaseElement<HTMLCanvasElement>;
 
   constructor(props: IPhotoEditorProps) {
     super({ ...props, tag: "div" });
 
     this.photoEditorService = props.photoEditorService;
-    this.photoEditorService.on("updatePhotoData", (photoData) => {
-      this.render(photoData);
-    });
-    this.photoEditorService.on("setOriginalImageData", () => {
-      this.drawHistogram();
-    });
-    this.photoEditorService.on("drawChannelHistogram", (data) => {
-      this.drawChannelHistogram(data);
+    this.photoEditorService.on("setNewPhotoData", (imageData) => {
+      this.render(imageData);
     });
     this.render();
   }
 
-  private render(photoData?: File | null) {
+  private render(imageData?: ImageData | null) {
     this.element.innerHTML = "";
-    this.createTemplate(photoData);
+    this.createTemplate(imageData);
   }
 
-  private createTemplate(photoData?: File | null) {
+  private createTemplate(imageData?: ImageData | null) {
     const makeGrayBtn = new BaseControl({
       tag: "button",
       content: "Make gray",
       eventType: "click",
       handler: () => {
-        this.photoEditorService.makeGray();
-        this.drawHistogram();
+        this.photoEditorService.applyFilter("gray");
       },
-      attributes: !photoData ? { disabled: true } : {},
+      attributes: !imageData ? { disabled: true } : {},
     });
 
     this.brightnessSlider = new BaseControl({
@@ -55,7 +47,7 @@ export class PhotoEditor extends BaseElement {
         min: "-100",
         max: "100",
         value: "0",
-        ...(!photoData ? { disabled: true } : {}),
+        ...(!imageData ? { disabled: true } : {}),
       },
       eventType: "input",
       handler: this.applyFilters.bind(this),
@@ -67,7 +59,7 @@ export class PhotoEditor extends BaseElement {
         min: "-100",
         max: "100",
         value: "0",
-        ...(!photoData ? { disabled: true } : {}),
+        ...(!imageData ? { disabled: true } : {}),
       },
       eventType: "input",
       handler: this.applyFilters.bind(this),
@@ -79,7 +71,7 @@ export class PhotoEditor extends BaseElement {
         min: "-100",
         max: "100",
         value: "0",
-        ...(!photoData ? { disabled: true } : {}),
+        ...(!imageData ? { disabled: true } : {}),
       },
       eventType: "input",
       handler: this.applyFilters.bind(this),
@@ -90,65 +82,31 @@ export class PhotoEditor extends BaseElement {
       content: "Reset filters",
       eventType: "click",
       handler: () => {
-        if (!this.photoEditorService.getPhotoData()) return;
         this.photoEditorService.resetImageDataToInitial();
         this.brightnessSlider.editAttributes({ value: 0 });
         this.saturationSlider.editAttributes({ value: 0 });
         this.contrastSlider.editAttributes({ value: 0 });
-        this.drawHistogram();
       },
-      attributes: !photoData ? { disabled: true } : {},
-    });
-
-    this.canvasHistogram = new BaseElement<HTMLCanvasElement>({
-      tag: "canvas",
-    });
-    const channelSelect = new Wrapper({
-      tag: "select",
-      handler: (event) => this.drawHistogram(event.target.value),
-      children: [
-        new BaseElement({
-          tag: "option",
-          attributes: { value: "all" },
-          content: "All channels (RGB)",
-        }).getElement(),
-        new BaseElement({
-          tag: "option",
-          attributes: { value: "r" },
-          content: "Red (R)",
-        }).getElement(),
-        new BaseElement({
-          tag: "option",
-          attributes: { value: "g" },
-          content: "Green (G)",
-        }).getElement(),
-        new BaseElement({
-          tag: "option",
-          attributes: { value: "b" },
-          content: "Blue (B)",
-        }).getElement(),
-      ],
+      attributes: !imageData ? { disabled: true } : {},
     });
 
     const medianFilterButton = new BaseControl({
       tag: "button",
       eventType: "click",
       content: "Calculate median",
-      attributes: !photoData ? { disabled: true } : {},
+      attributes: !imageData ? { disabled: true } : {},
       handler: () => {
-        this.photoEditorService.medianFilter();
-        this.drawHistogram();
+        this.photoEditorService.applyFilter("median");
       },
     });
 
     const sharpenBtn = new BaseControl({
       tag: "button",
       eventType: "click",
-      attributes: !photoData ? { disabled: true } : {},
+      attributes: !imageData ? { disabled: true } : {},
       content: "Sharp",
       handler: () => {
-        this.photoEditorService.sharpeImage();
-        this.drawHistogram();
+        this.photoEditorService.applyFilter("sharpen");
       },
     });
 
@@ -159,7 +117,7 @@ export class PhotoEditor extends BaseElement {
         min: "0",
         max: "255",
         value: "100",
-        ...(!photoData ? { disabled: true } : {}),
+        ...(!imageData ? { disabled: true } : {}),
       },
       eventType: "input",
       handler: () => {},
@@ -171,22 +129,21 @@ export class PhotoEditor extends BaseElement {
         min: "0",
         max: "255",
         value: "100",
-        ...(!photoData ? { disabled: true } : {}),
+        ...(!imageData ? { disabled: true } : {}),
       },
       eventType: "input",
       handler: () => {},
     });
-
     const applyCannyButton = new BaseControl({
       tag: "button",
       eventType: "click",
       content: "Apply Canny",
       handler: () => {
-        this.photoEditorService.applyCanny(
-          threshold2Slider.value!,
-          threshold2Slider.value!
+        this.photoEditorService.applyFilter(
+          "canny",
+          threshold2Slider.value,
+          threshold2Slider.value
         );
-        this.drawHistogram();
       },
     });
 
@@ -195,8 +152,7 @@ export class PhotoEditor extends BaseElement {
       eventType: "click",
       content: "Apply Roberts",
       handler: () => {
-        this.photoEditorService.applyRobertsFilter();
-        this.drawHistogram();
+        this.photoEditorService.applyFilter("roberts");
       },
     });
 
@@ -209,7 +165,6 @@ export class PhotoEditor extends BaseElement {
       eventType: "input",
       handler: () => {},
     });
-
     const motionBlurDistanceInput = new BaseControl({
       tag: "input",
       attributes: {
@@ -219,17 +174,16 @@ export class PhotoEditor extends BaseElement {
       eventType: "input",
       handler: () => {},
     });
-
     const applyMotionBlurButton = new BaseControl({
       tag: "button",
       eventType: "click",
       content: "Motion Blur",
       handler: () => {
-        this.photoEditorService.applyMotionBlur(
-          motionBlurAngelInput.value!,
-          motionBlurDistanceInput.value!
+        this.photoEditorService.applyFilter(
+          "motion",
+          motionBlurAngelInput.value,
+          motionBlurDistanceInput.value
         );
-        this.drawHistogram();
       },
     });
 
@@ -241,8 +195,6 @@ export class PhotoEditor extends BaseElement {
         this.brightnessSlider.getElement(),
         this.saturationSlider.getElement(),
         this.contrastSlider.getElement(),
-        this.canvasHistogram.getElement(),
-        channelSelect.getElement(),
         sharpenBtn.getElement(),
         medianFilterButton.getElement(),
         threshold1Slider.getElement(),
@@ -258,47 +210,11 @@ export class PhotoEditor extends BaseElement {
     this.element.append(wrapper.getElement());
   }
 
-  private drawHistogram(event?: any) {
-    const canvas = this.canvasHistogram.getElement()!;
-    const ctxHistogram = canvas.getContext("2d")!;
-    ctxHistogram.clearRect(
-      0,
-      0,
-      this.canvasHistogram.getElement().width,
-      this.canvasHistogram.getElement().height
-    );
-    this.photoEditorService.drawHistogram(event);
-  }
-
-  private drawChannelHistogram({
-    channelData,
-    color,
-    maxValue,
-  }: Parameters<PhotoEditorService["drawChannelHistogram"]>[0]) {
-    const canvas = this.canvasHistogram.getElement()!;
-    const ctxHistogram = canvas.getContext("2d")!;
-    ctxHistogram.fillStyle = color;
-    const height = canvas.height;
-    const width = canvas.width;
-    const barWidth = width / 256;
-
-    for (let i = 0; i < 256; i++) {
-      const heightValue = (channelData[i] / maxValue) * height;
-      ctxHistogram.fillRect(
-        i * barWidth,
-        height - heightValue,
-        barWidth,
-        heightValue
-      );
-    }
-  }
-
   private applyFilters() {
-    this.photoEditorService.applyFilters({
+    this.photoEditorService.applyFilter("bsc", {
       brightness: Number(this.brightnessSlider.value),
       saturation: Number(this.saturationSlider.value),
       contrast: Number(this.contrastSlider.value),
     });
-    this.drawHistogram();
   }
 }
