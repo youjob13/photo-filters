@@ -4,6 +4,7 @@ import { BaseControl } from "../baseControl.js";
 import { BaseElement, IBaseElementProps } from "../baseElement.js";
 import { Wrapper } from "../wrapper.js";
 import "./styles.css";
+import cv from "@techstark/opencv-js";
 
 export interface IPhotoUploaderProps extends IBaseElementProps {
   photoEditorService: PhotoEditorService;
@@ -20,6 +21,9 @@ export class PhotoUploader extends BaseElement {
     this.photoEditorService.on("updateImage", (imageData) =>
       this.updateImage(imageData)
     );
+    this.photoEditorService.on("updateImageDataWithOpenCV", (data) => {
+      cv.imshow(this.canvas.getElement(), data);
+    });
     this.createTemplate();
   }
 
@@ -95,6 +99,7 @@ export class PhotoUploader extends BaseElement {
       img.height as number
     );
     this.photoEditorService.setOriginalImageData(imageData);
+    this.photoEditorService.savePhotoInCVFormat(canvas);
   }
 
   private updateImage(imageData: ImageData) {

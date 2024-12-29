@@ -20,29 +20,30 @@ export class PhotoEditor extends BaseElement {
 
     this.photoEditorService = props.photoEditorService;
     this.photoEditorService.on("updatePhotoData", (photoData) => {
-      this.render(false, photoData);
+      this.render(photoData);
     });
-    this.photoEditorService.on("setOriginalImageData", (data) => {
+    this.photoEditorService.on("setOriginalImageData", () => {
       this.drawHistogram();
     });
     this.photoEditorService.on("drawChannelHistogram", (data) => {
       this.drawChannelHistogram(data);
     });
-    this.render(true);
+    this.render();
   }
 
-  private render(initialRender?: boolean, photoData?: File | null) {
+  private render(photoData?: File | null) {
     this.element.innerHTML = "";
-    this.createTemplate(initialRender, photoData);
+    this.createTemplate(photoData);
   }
 
-  private createTemplate(initialRender?: boolean, photoData?: File | null) {
+  private createTemplate(photoData?: File | null) {
     const makeGrayBtn = new BaseControl({
       tag: "button",
       content: "Make gray",
       eventType: "click",
       handler: () => {
-        this.makeGray();
+        this.photoEditorService.makeGray();
+        this.drawHistogram();
       },
       attributes: !photoData ? { disabled: true } : {},
     });
@@ -129,15 +130,106 @@ export class PhotoEditor extends BaseElement {
       ],
     });
 
+    const medianFilterButton = new BaseControl({
+      tag: "button",
+      eventType: "click",
+      content: "Calculate median",
+      attributes: !photoData ? { disabled: true } : {},
+      handler: () => {
+        this.photoEditorService.medianFilter();
+        this.drawHistogram();
+      },
+    });
+
     const sharpenBtn = new BaseControl({
       tag: "button",
       eventType: "click",
+      attributes: !photoData ? { disabled: true } : {},
       content: "Sharp",
       handler: () => {
-        this.photoEditorService.sharpenImage(
-          this.canvasHistogram.getElement().width,
-          this.canvasHistogram.getElement().height
+        this.photoEditorService.sharpeImage();
+        this.drawHistogram();
+      },
+    });
+
+    const threshold1Slider = new BaseControl({
+      tag: "input",
+      attributes: {
+        type: "range",
+        min: "0",
+        max: "255",
+        value: "100",
+        ...(!photoData ? { disabled: true } : {}),
+      },
+      eventType: "input",
+      handler: () => {},
+    });
+    const threshold2Slider = new BaseControl({
+      tag: "input",
+      attributes: {
+        type: "range",
+        min: "0",
+        max: "255",
+        value: "100",
+        ...(!photoData ? { disabled: true } : {}),
+      },
+      eventType: "input",
+      handler: () => {},
+    });
+
+    const applyCannyButton = new BaseControl({
+      tag: "button",
+      eventType: "click",
+      content: "Apply Canny",
+      handler: () => {
+        this.photoEditorService.applyCanny(
+          threshold2Slider.value!,
+          threshold2Slider.value!
         );
+        this.drawHistogram();
+      },
+    });
+
+    const applyRobertsButton = new BaseControl({
+      tag: "button",
+      eventType: "click",
+      content: "Apply Roberts",
+      handler: () => {
+        this.photoEditorService.applyRobertsFilter();
+        this.drawHistogram();
+      },
+    });
+
+    const motionBlurAngelInput = new BaseControl({
+      tag: "input",
+      attributes: {
+        type: "number",
+        value: "0",
+      },
+      eventType: "input",
+      handler: () => {},
+    });
+
+    const motionBlurDistanceInput = new BaseControl({
+      tag: "input",
+      attributes: {
+        type: "number",
+        value: "0",
+      },
+      eventType: "input",
+      handler: () => {},
+    });
+
+    const applyMotionBlurButton = new BaseControl({
+      tag: "button",
+      eventType: "click",
+      content: "Motion Blur",
+      handler: () => {
+        this.photoEditorService.applyMotionBlur(
+          motionBlurAngelInput.value!,
+          motionBlurDistanceInput.value!
+        );
+        this.drawHistogram();
       },
     });
 
@@ -152,6 +244,14 @@ export class PhotoEditor extends BaseElement {
         this.canvasHistogram.getElement(),
         channelSelect.getElement(),
         sharpenBtn.getElement(),
+        medianFilterButton.getElement(),
+        threshold1Slider.getElement(),
+        threshold2Slider.getElement(),
+        applyCannyButton.getElement(),
+        applyRobertsButton.getElement(),
+        motionBlurAngelInput.getElement(),
+        motionBlurDistanceInput.getElement(),
+        applyMotionBlurButton.getElement(),
         resetFiltersBtn.getElement(),
       ],
     });
@@ -191,11 +291,6 @@ export class PhotoEditor extends BaseElement {
         heightValue
       );
     }
-  }
-
-  private makeGray() {
-    this.photoEditorService.makeGray();
-    this.drawHistogram();
   }
 
   private applyFilters() {
