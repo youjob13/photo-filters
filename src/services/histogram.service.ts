@@ -2,7 +2,7 @@ import EventEmitter from "events";
 
 export class HistogramService extends EventEmitter {
   private lastSelectedChannel: "r" | "g" | "b" | "all" | undefined;
-  private imageData!: ImageData;
+  private imageData: ImageData | undefined;
 
   setImageData(imageData: ImageData) {
     this.imageData = imageData;
@@ -16,7 +16,12 @@ export class HistogramService extends EventEmitter {
       this.setImageData(imageData);
     }
 
-    const data = imageData?.data ?? this.imageData.data;
+    const data = imageData?.data ?? this.imageData?.data;
+
+    if (data == null) {
+      return;
+    }
+
     const hist = {
       r: Array(256).fill(0),
       g: Array(256).fill(0),

@@ -138,6 +138,7 @@ export class PhotoEditor extends BaseElement {
       tag: "button",
       eventType: "click",
       content: "Apply Canny",
+      attributes: !imageData ? { disabled: true } : {},
       handler: () => {
         this.photoEditorService.applyFilter(
           "canny",
@@ -151,6 +152,7 @@ export class PhotoEditor extends BaseElement {
       tag: "button",
       eventType: "click",
       content: "Apply Roberts",
+      attributes: !imageData ? { disabled: true } : {},
       handler: () => {
         this.photoEditorService.applyFilter("roberts");
       },
@@ -161,6 +163,7 @@ export class PhotoEditor extends BaseElement {
       attributes: {
         type: "number",
         value: "0",
+        ...(!imageData ? { disabled: true } : {}),
       },
       eventType: "input",
       handler: () => {},
@@ -170,6 +173,7 @@ export class PhotoEditor extends BaseElement {
       attributes: {
         type: "number",
         value: "0",
+        ...(!imageData ? { disabled: true } : {}),
       },
       eventType: "input",
       handler: () => {},
@@ -178,6 +182,7 @@ export class PhotoEditor extends BaseElement {
       tag: "button",
       eventType: "click",
       content: "Motion Blur",
+      attributes: !imageData ? { disabled: true } : {},
       handler: () => {
         this.photoEditorService.applyFilter(
           "motion",

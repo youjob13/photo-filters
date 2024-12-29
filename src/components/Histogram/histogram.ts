@@ -1,6 +1,7 @@
 import { HistogramService } from "../../services/histogram.service.js";
 import { BaseElement, IBaseElementProps } from "../baseElement.js";
 import { Wrapper } from "../wrapper.js";
+import "./styles.css";
 
 export interface IHistogramProps extends IBaseElementProps {
   histogramService: HistogramService;
@@ -17,7 +18,7 @@ export class Histogram extends BaseElement {
   private canvasHistogram!: BaseElement<HTMLCanvasElement>;
 
   constructor(props: IHistogramProps) {
-    super({ ...props, tag: "div" });
+    super({ ...props, tag: "div", classes: ["histogram"] });
 
     this.histogramService = props.histogramService;
     this.histogramService.on("drawHistogram", (data) => {
