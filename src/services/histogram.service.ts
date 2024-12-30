@@ -28,14 +28,12 @@ export class HistogramService extends EventEmitter {
       b: Array(256).fill(0),
     };
 
-    // Считаем гистограмму для каждого канала
     for (let i = 0; i < data.length; i += 4) {
       hist.r[data[i]]++;
       hist.g[data[i + 1]]++;
       hist.b[data[i + 2]]++;
     }
 
-    // Нарисуем гистограмму для выбранного канала
     let maxValue = Math.max(...hist.r, ...hist.g, ...hist.b);
     let color: { r: "red"; g: "green"; b: "blue" } = {
       r: "red",

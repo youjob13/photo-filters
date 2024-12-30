@@ -7,8 +7,17 @@ import { MotionBlurFilter } from "./motion-blur.filter";
 import { RobertsFilter } from "./roberts.filter";
 import { SharpenFilter } from "./sharpen.filter";
 
+export type Filters =
+  | "sharpen"
+  | "median"
+  | "roberts"
+  | "motion"
+  | "gray"
+  | "canny"
+  | "bsc";
+
 export class ApplyFilterFactory {
-  applyFilter(filterName: string): PhotoFilter {
+  applyFilter(filterName: Filters): PhotoFilter {
     switch (filterName) {
       case "sharpen": {
         return new SharpenFilter();
@@ -29,8 +38,9 @@ export class ApplyFilterFactory {
         return new CannyFilter();
       }
       case "bsc":
-      default:
         return new BSCFilter();
+      default:
+        throw new Error("The provided filter name is not exist");
     }
   }
 }

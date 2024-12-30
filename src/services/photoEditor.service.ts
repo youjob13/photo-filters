@@ -1,6 +1,6 @@
 import EventEmitter from "events";
 import { HistogramService } from "./histogram.service";
-import { ApplyFilterFactory } from "../filters/filter-factory";
+import { ApplyFilterFactory, Filters } from "../filters/filter-factory";
 
 export class PhotoEditorService extends EventEmitter {
   private originalImageData: ImageData | undefined;
@@ -26,7 +26,7 @@ export class PhotoEditorService extends EventEmitter {
     return this.currentImageData;
   }
 
-  applyFilter(filterName: string, ...args: any[]) {
+  applyFilter(filterName: Filters, ...args: any[]) {
     if (this.originalImageData == null) {
       throw new Error("Image data is not exist");
     }
