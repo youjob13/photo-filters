@@ -2,6 +2,7 @@ import { PhotoEditorService } from "../../services/photoEditor.service.js";
 import { BaseControl } from "../baseControl.js";
 import { BaseElement, IBaseElementProps } from "../baseElement.js";
 import { Wrapper } from "../wrapper.js";
+import { FilterWrapper } from "./filterWrapper.js";
 import "./styles.css";
 
 export interface IPhotoEditorProps extends IBaseElementProps {
@@ -30,15 +31,18 @@ export class PhotoEditor extends BaseElement {
   }
 
   private createTemplate(imageData?: ImageData | null) {
-    const makeGrayBtn = new BaseControl({
-      tag: "button",
-      content: "Make gray",
-      eventType: "click",
-      handler: () => {
-        this.photoEditorService.applyFilter("gray");
-      },
-      attributes: !imageData ? { disabled: true } : {},
-    });
+    const grayFilterComponent = new FilterWrapper(
+      "Gray filter",
+      new BaseControl({
+        tag: "button",
+        content: "Make gray",
+        eventType: "click",
+        handler: () => {
+          this.photoEditorService.applyFilter("gray");
+        },
+        attributes: !imageData ? { disabled: true } : {},
+      })
+    );
 
     this.brightnessSlider = new BaseControl({
       tag: "input",
@@ -77,38 +81,37 @@ export class PhotoEditor extends BaseElement {
       handler: this.applyFilters.bind(this),
     });
 
-    const resetFiltersBtn = new BaseControl({
-      tag: "button",
-      content: "Reset filters",
-      eventType: "click",
-      handler: () => {
-        this.photoEditorService.resetImageDataToInitial();
-        this.brightnessSlider.editAttributes({ value: 0 });
-        this.saturationSlider.editAttributes({ value: 0 });
-        this.contrastSlider.editAttributes({ value: 0 });
-      },
-      attributes: !imageData ? { disabled: true } : {},
-    });
+    const bscFilter = new FilterWrapper("Brightness|Saturation|Contrast", [
+      this.brightnessSlider,
+      this.saturationSlider,
+      this.contrastSlider,
+    ]);
 
-    const medianFilterButton = new BaseControl({
-      tag: "button",
-      eventType: "click",
-      content: "Calculate median",
-      attributes: !imageData ? { disabled: true } : {},
-      handler: () => {
-        this.photoEditorService.applyFilter("median");
-      },
-    });
+    const medianFilter = new FilterWrapper(
+      "Median",
+      new BaseControl({
+        tag: "button",
+        eventType: "click",
+        content: "Calculate median",
+        attributes: !imageData ? { disabled: true } : {},
+        handler: () => {
+          this.photoEditorService.applyFilter("median");
+        },
+      })
+    );
 
-    const sharpenBtn = new BaseControl({
-      tag: "button",
-      eventType: "click",
-      attributes: !imageData ? { disabled: true } : {},
-      content: "Sharp",
-      handler: () => {
-        this.photoEditorService.applyFilter("sharpen");
-      },
-    });
+    const sharpenFilter = new FilterWrapper(
+      "Sharp",
+      new BaseControl({
+        tag: "button",
+        eventType: "click",
+        attributes: !imageData ? { disabled: true } : {},
+        content: "Sharp",
+        handler: () => {
+          this.photoEditorService.applyFilter("sharpen");
+        },
+      })
+    );
 
     const threshold1Slider = new BaseControl({
       tag: "input",
@@ -148,15 +151,24 @@ export class PhotoEditor extends BaseElement {
       },
     });
 
-    const applyRobertsButton = new BaseControl({
-      tag: "button",
-      eventType: "click",
-      content: "Apply Roberts",
-      attributes: !imageData ? { disabled: true } : {},
-      handler: () => {
-        this.photoEditorService.applyFilter("roberts");
-      },
-    });
+    const cannyFilter = new FilterWrapper("Canny", [
+      threshold1Slider,
+      threshold2Slider,
+      applyCannyButton,
+    ]);
+
+    const robertsFilter = new FilterWrapper(
+      "Roberts",
+      new BaseControl({
+        tag: "button",
+        eventType: "click",
+        content: "Apply Roberts",
+        attributes: !imageData ? { disabled: true } : {},
+        handler: () => {
+          this.photoEditorService.applyFilter("roberts");
+        },
+      })
+    );
 
     const motionBlurAngelInput = new BaseControl({
       tag: "input",
@@ -192,23 +204,36 @@ export class PhotoEditor extends BaseElement {
       },
     });
 
+    const motionBlurFilter = new FilterWrapper("Motion Blur", [
+      motionBlurAngelInput,
+      motionBlurDistanceInput,
+      applyMotionBlurButton,
+    ]);
+
+    const resetFiltersBtn = new BaseControl({
+      tag: "button",
+      content: "Reset filters",
+      eventType: "click",
+      handler: () => {
+        this.photoEditorService.resetImageDataToInitial();
+        this.brightnessSlider.editAttributes({ value: 0 });
+        this.saturationSlider.editAttributes({ value: 0 });
+        this.contrastSlider.editAttributes({ value: 0 });
+      },
+      attributes: !imageData ? { disabled: true } : {},
+    });
+
     const wrapper = new Wrapper({
       tag: "div",
       classes: ["wrapper"],
       children: [
-        makeGrayBtn.getElement(),
-        this.brightnessSlider.getElement(),
-        this.saturationSlider.getElement(),
-        this.contrastSlider.getElement(),
-        sharpenBtn.getElement(),
-        medianFilterButton.getElement(),
-        threshold1Slider.getElement(),
-        threshold2Slider.getElement(),
-        applyCannyButton.getElement(),
-        applyRobertsButton.getElement(),
-        motionBlurAngelInput.getElement(),
-        motionBlurDistanceInput.getElement(),
-        applyMotionBlurButton.getElement(),
+        grayFilterComponent.getElement(),
+        bscFilter.getElement(),
+        sharpenFilter.getElement(),
+        medianFilter.getElement(),
+        cannyFilter.getElement(),
+        robertsFilter.getElement(),
+        motionBlurFilter.getElement(),
         resetFiltersBtn.getElement(),
       ],
     });

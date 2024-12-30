@@ -6,9 +6,14 @@
   row-gap: 30px;
 }
 
+.photo-input {
+  margin: 0 auto;
+}
+
 .photo-viewer {
-  max-width: 400px;
+  max-width: 60%;
   height: auto;
+  margin: 0 auto;
 }
 
 .photo-info-wrapper {
@@ -16,4 +21,5 @@
   display: flex;
   flex-direction: column;
   row-gap: 5px;
+  margin: 0 auto;
 }

@@ -42,6 +42,7 @@ export class PhotoUploader extends BaseElement {
     });
     const inputUploader = new BaseControl({
       tag: "input",
+      classes: ["photo-input"],
       attributes: { type: "file" },
       eventType: "change",
       handler: (event) => this.drawPhoto(event, photoInfoWrapper),
