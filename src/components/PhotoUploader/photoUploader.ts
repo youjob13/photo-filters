@@ -84,7 +84,7 @@ export class PhotoUploader extends BaseElement {
     fileReader.readAsDataURL(image);
   }
 
-  private drawImage(img: CanvasImageSource) {
+  private drawImage(img: HTMLImageElement) {
     const canvas = this.canvas.getElement();
     const ctx = canvas.getContext("2d")!;
     canvas.width = img.width as number;
